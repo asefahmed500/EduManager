@@ -44,10 +44,19 @@ Next.js **16.2.6** (App Router, Turbopack) · React 19 · TS · Tailwind v4 · s
 - Multi-role flows use **separate browser contexts** (cookies persist per context; the proxy redirects logged-in users away from `/login`, so you can't switch users by re-visiting `/login` in the same context).
 
 ## Architecture & data model
-- Hybrid backend: **Route Handlers** (`app/api`) for auth (login/register/forgot/reset) + notifications; **Server Actions** (`app/actions/{assignments,submissions,admin}.ts`) for all mutations. Every mutation re-validates via `requireRole` + ownership — proxy is not the only defense.
+- Hybrid backend: **Route Handlers** (`app/api`) for auth (login/register/forgot/reset) + notifications; **Server Actions** (`app/actions/{assignments,submissions,admin,profile}.ts`) for all mutations. Every mutation re-validates via `requireRole` + ownership — proxy is not the only defense.
 - Key relations: `User.classId` (students → one Class); `ClassSubject` maps class↔subject; `TeacherSubjectClass` assigns a teacher to a class+subject pair (controls what assignments a teacher can create); `Submission` is unique per `(assignmentId, studentId)`.
+- **Soft-delete**: `User.isDeleted` (Boolean). `deleteUser` sets it instead of removing the row. `getCurrentUser` (DAL), the login route, and admin user lists all filter `isDeleted: false`.
+- **Notifications**: `Notification` model + `lib/notify.ts` (`createNotifications`) fires on assignment publish (→ class students), submission (→ teacher), and grading (→ student). The header bell + `/notifications` page consume them.
+- **Settings**: `Setting` model is a key-value store. `maxUploadMb` is read from settings at runtime in `submitAssignment` (falls back to `MAX_UPLOAD_MB` env).
+- **Profile pages** are per-role: `app/{admin,teacher,student}/profile/page.tsx` — NOT a standalone `/profile` (it must live inside the role layout so the sidebar renders). Shared content is in `components/profile/profile-view.tsx`.
 - Business rules live in `lib/rules.ts` (visibility, deadline/edit, marks ≤ max, teacher ownership, role access) and are called by the actions.
 - File uploads: single file ≤10 MB to `public/uploads` (gitignored), type/size validated in `submitAssignment`.
+- Shared UI: `DataFilters` (dropdown filter bar: search + Select dropdowns + clear), `Pagination` (Prev/Next + totals), `buildUrl` in `lib/url.ts` for preserving query params across filter/pagination links.
+
+## Dev workflow
+- **After a Prisma schema change + `prisma generate`**, the running dev server's Turbopack cache (`.next/`) may serve a stale client. Kill all `next` processes, delete `.next/`, and restart `npm run dev` — otherwise pages 500 with `Unknown argument` errors from the old generated types.
+- Multiple stale `next dev` processes can pile up and fight over port 3000. Kill them all before starting a fresh one.
 
 ## Env & secrets
 - `.env.local` is the single source for Next.js and Prisma (via `prisma.config.ts`). `.env.example` is committed with placeholders; `.env.local` is git-ignored. Never commit real values.
