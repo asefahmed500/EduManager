@@ -63,6 +63,19 @@ test("admin: every admin page renders", async ({ browser }) => {
         page.getByRole("heading", { name: p.heading }),
       ).toBeVisible({ timeout: 10_000 });
     }
+
+    // Admin assignment detail page (via the View link).
+    await page.goto("/admin/assignments");
+    const hrefs = await page
+      .locator('a[href^="/admin/assignments/"]')
+      .evaluateAll((els) =>
+        els.map((e) => (e as HTMLAnchorElement).getAttribute("href") ?? ""),
+      );
+    const id = hrefs
+      .map((h) => h.split("/").pop()!)
+      .find((x) => /^\d+$/.test(x))!;
+    await page.goto(`/admin/assignments/${id}`);
+    await expect(page.locator("h1")).toBeVisible();
   } finally {
     await ctx.close();
   }

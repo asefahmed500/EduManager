@@ -52,7 +52,14 @@ export function AssignmentRowActions({ id, published }: Props) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        render={<Button variant="ghost" size="icon-sm" aria-label="Actions" />}
+        render={
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="More actions"
+            title="More actions"
+          />
+        }
         disabled={busy}
       >
         <MoreHorizontalIcon className="size-4" />

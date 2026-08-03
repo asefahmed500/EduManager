@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/dal";
 import { buildUrl } from "@/lib/url";
@@ -86,7 +88,13 @@ export default async function AdminSubmissions({
                       {s.student.name}
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
-                      {s.assignment.title} · {s.assignment.subject.name}
+                      <Link
+                        href={`/admin/assignments/${s.assignmentId}`}
+                        className="hover:underline"
+                      >
+                        {s.assignment.title}
+                      </Link>{" "}
+                      · {s.assignment.subject.name}
                     </p>
                   </div>
                   <span className="hidden text-xs tabular-nums text-muted-foreground sm:inline">

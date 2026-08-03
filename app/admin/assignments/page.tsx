@@ -1,9 +1,12 @@
+import Link from "next/link";
 import { format } from "date-fns";
+import { EyeIcon } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/dal";
 import { buildUrl } from "@/lib/url";
 import { PageHeader } from "@/components/layout/page-header";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataFilters } from "@/components/layout/data-filters";
 import { Pagination } from "@/components/layout/pagination";
@@ -118,7 +121,12 @@ export default async function AdminAssignments({
                   className="flex items-center gap-3 px-4 py-3 md:px-6"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{a.title}</p>
+                    <Link
+                      href={`/admin/assignments/${a.id}`}
+                      className="truncate text-sm font-medium hover:underline"
+                    >
+                      {a.title}
+                    </Link>
                     <p className="truncate text-xs text-muted-foreground">
                       {a.class.name} · {a.subject.name} · by {a.teacher.name} ·
                       due {format(a.deadline, "d MMM yyyy")}
@@ -128,6 +136,16 @@ export default async function AdminAssignments({
                     {a._count.submissions} subs
                   </span>
                   <AssignmentStatusBadge status={a.status} />
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="View assignment"
+                    title="View assignment"
+                    nativeButton={false}
+                    render={<Link href={`/admin/assignments/${a.id}`} />}
+                  >
+                    <EyeIcon className="size-4" />
+                  </Button>
                 </li>
               ))}
             </ul>

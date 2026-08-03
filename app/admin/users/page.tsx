@@ -1,4 +1,4 @@
-﻿import { PlusIcon } from "lucide-react";
+﻿import { EyeIcon, PlusIcon } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/dal";
@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { DataFilters } from "@/components/layout/data-filters";
 import { Pagination } from "@/components/layout/pagination";
 import { UserFormDialog } from "@/components/admin/user-form-dialog";
+import { UserViewDialog } from "@/components/admin/user-view-dialog";
 import { RowDeleteButton } from "@/components/admin/row-delete-button";
 import { ActivateButton } from "@/components/admin/activate-button";
 import { deleteUser } from "@/app/actions/admin";
@@ -57,6 +58,7 @@ export default async function AdminUsers({
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * PER_PAGE,
       take: PER_PAGE,
+      include: { _count: { select: { submissions: true, assignments: true } } },
     }),
     prisma.class.findMany({ orderBy: { name: "asc" } }),
     prisma.user.count({ where }),
@@ -139,6 +141,31 @@ export default async function AdminUsers({
                     {u.isActive ? "Active" : "Inactive"}
                   </Badge>
                   <ActivateButton id={u.id} active={u.isActive} />
+                  <UserViewDialog
+                    user={{
+                      id: u.id,
+                      name: u.name,
+                      email: u.email,
+                      role: u.role,
+                      isActive: u.isActive,
+                      className: u.classId
+                        ? classMap.get(u.classId) ?? null
+                        : null,
+                      createdAt: u.createdAt,
+                      submissionCount: u._count.submissions,
+                      assignmentCount: u._count.assignments,
+                    }}
+                    trigger={
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label="View profile"
+                        title="View profile"
+                      >
+                        <EyeIcon className="size-4" />
+                      </Button>
+                    }
+                  />
                   <UserFormDialog
                     user={{
                       id: u.id,

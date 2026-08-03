@@ -11,12 +11,14 @@ type Props = {
   id: number;
   action: (id: number) => Promise<{ ok?: boolean; error?: string }>;
   confirmMessage?: string;
+  title?: string;
 };
 
 export function RowDeleteButton({
   id,
   action,
   confirmMessage = "Are you sure you want to delete this?",
+  title = "Delete",
 }: Props) {
   const router = useRouter();
   const [busy, setBusy] = React.useState(false);
@@ -40,7 +42,8 @@ export function RowDeleteButton({
       size="icon-sm"
       onClick={run}
       disabled={busy}
-      aria-label="Delete"
+      aria-label={title}
+      title={title}
     >
       <Trash2Icon className="size-4" />
     </Button>
