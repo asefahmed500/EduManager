@@ -18,6 +18,8 @@
     "db:setup": "node scripts/create-database.js && prisma migrate dev && tsx prisma/seed.ts",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:db:setup": "node scripts/setup-test-db.js",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:e2e": "playwright test"
   },
   "dependencies": {

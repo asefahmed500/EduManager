@@ -35,7 +35,11 @@ export function GradeForm({ submissionId, maxMarks, defaults }: Props) {
     gradeSubmission,
     EMPTY_STATE,
   );
-  const [status, setStatus] = React.useState(defaults.status);
+  const [status, setStatus] = React.useState(
+    defaults.status === "GRADED" || defaults.status === "RETURNED"
+      ? defaults.status
+      : "GRADED",
+  );
 
   React.useEffect(() => {
     if (state?.ok) {

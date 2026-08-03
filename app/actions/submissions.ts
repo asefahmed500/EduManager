@@ -114,7 +114,7 @@ export async function submitAssignment(
     await prisma.submission.update({ where: { id: existing.id }, data });
   } else {
     await prisma.submission.create({
-      data: { ...data, assignmentId, studentId: user.id, status: "SUBMITTED" },
+      data: { ...data, assignmentId, studentId: user.id },
     });
   }
 

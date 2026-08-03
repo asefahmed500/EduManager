@@ -210,7 +210,21 @@ npm run test        # run once
 npm run test:watch  # watch mode
 ```
 
-**End-to-end tests (Playwright)** — login & RBAC flows. First time only,
+**Integration tests (Vitest, real database)** — exercises the Server Actions,
+Route Handlers and Data Access Layer against a dedicated `edumanager_test`
+PostgreSQL database. Covers auth (login/register/password reset), role-based
+authorization guards, and the full admin/teacher/student workflows:
+
+```bash
+npm run test:db:setup    # creates + migrates + seeds the test DB (first time)
+npm run test:integration # run the integration suite
+```
+
+> `TEST_DATABASE_URL` in `.env.local` points at the test database. The suite
+> refuses to run against a non-`_test` database so dev data can never be wiped.
+
+**End-to-end tests (Playwright)** — browser flows including the full
+create → publish → submit → grade → feedback workflow. First time only,
 install the browser:
 
 ```bash
@@ -219,8 +233,7 @@ npm run test:e2e
 ```
 
 The e2e command automatically starts the dev server, runs the seed-confirmed
-flows (sign-in for each role, protected-route redirect, role-based redirect,
-teacher assignment navigation) and tears it down.
+flows and tears it down.
 
 **Lint / type-check:**
 

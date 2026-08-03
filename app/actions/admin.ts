@@ -22,9 +22,11 @@ const userSchema = z.object({
     .optional()
     .transform((v) => (v ? Number(v) : null)),
   isActive: z
-    .string()
+    .union([z.literal("on"), z.literal("true"), z.literal("false")])
     .optional()
-    .transform((v) => v === "on"),
+    .transform((v) =>
+      v === undefined ? undefined : v === "on" || v === "true",
+    ),
 });
 
 export async function createUser(
@@ -82,7 +84,7 @@ export async function updateUser(
       email,
       role,
       classId: role === "STUDENT" ? classId : null,
-      isActive: isActive ?? false,
+      ...(isActive !== undefined ? { isActive } : {}),
       ...(password && password.length >= 6
         ? { passwordHash: await hashPassword(password) }
         : {}),
