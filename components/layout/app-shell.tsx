@@ -10,6 +10,7 @@ import {
   GraduationCapIcon,
   InboxIcon,
   LayoutDashboardIcon,
+  PlusIcon,
   SettingsIcon,
   UsersIcon,
   type LucideIcon,
@@ -70,14 +71,22 @@ const NAV: Record<string, NavGroup[]> = {
   ],
   TEACHER: [
     {
+      label: "Overview",
       items: [
         { title: "Dashboard", href: "/teacher/dashboard", icon: LayoutDashboardIcon },
         { title: "Assignments", href: "/teacher/assignments", icon: ClipboardListIcon },
       ],
     },
+    {
+      label: "Create",
+      items: [
+        { title: "New assignment", href: "/teacher/assignments/create", icon: PlusIcon },
+      ],
+    },
   ],
   STUDENT: [
     {
+      label: "Overview",
       items: [
         { title: "Dashboard", href: "/student/dashboard", icon: LayoutDashboardIcon },
         { title: "Assignments", href: "/student/assignments", icon: ClipboardListIcon },

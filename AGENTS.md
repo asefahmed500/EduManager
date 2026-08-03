@@ -38,7 +38,9 @@ Next.js **16.2.6** (App Router, Turbopack) · React 19 · TS · Tailwind v4 · s
 ## Tests (three tiers)
 - **Unit:** `npm test` (Vitest) — pure business rules in `lib/rules.ts`, tested in `tests/business-rules.test.ts`. Keep the 7 PRD rules and `lib/rules.ts` in sync with the Server Actions.
 - **Integration:** `npm run test:db:setup` (creates/migrates/seeds `edumanager_test`) then `npm run test:integration` (`vitest.integration.config.ts`). Requires `TEST_DATABASE_URL` in `.env.local`. Setup (`tests/integration/setup.ts`) mocks `next/headers`, `next/navigation`, `next/cache`, React `cache`, and `server-only`, and **hard-refuses to run against a non-`_test` DB**. Exercises real Server Actions + Route Handlers against Postgres.
-- **E2E:** `npx playwright install chromium` once, then `npm run test:e2e`. Auto-starts `next dev` (reuses a running one); the dev DB must be seeded. Multi-role flows use **separate browser contexts** (cookies persist per context; the proxy redirects logged-in users away from `/login`).
+- **E2E:** `npx playwright install chromium` once, then `npm run test:e2e`. Auto-starts `next dev` (reuses a running one); the dev DB must be seeded. Suite: `auth.spec.ts` (login/RBAC/register/sign-out), `workflow.spec.ts` (create → publish → submit → grade → feedback), `all-pages.spec.ts` (visits every page for every role and asserts it renders).
+- E2E locator gotcha: **the Base UI sidebar is also `<ul><li><a>`**, so `locator("li a")` matches nav items before page content. Scope to content or filter by href (e.g. `a[href^="/teacher/assignments/"]`, then keep the segment that is all digits).
+- Multi-role flows use **separate browser contexts** (cookies persist per context; the proxy redirects logged-in users away from `/login`, so you can't switch users by re-visiting `/login` in the same context).
 
 ## Architecture & data model
 - Hybrid backend: **Route Handlers** (`app/api`) for auth (login/register/forgot/reset) + notifications; **Server Actions** (`app/actions/{assignments,submissions,admin}.ts`) for all mutations. Every mutation re-validates via `requireRole` + ownership — proxy is not the only defense.
