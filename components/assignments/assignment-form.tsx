@@ -53,6 +53,12 @@ export function AssignmentForm({
   const [classSubjectId, setClassSubjectId] = React.useState(
     String(defaults?.classSubjectId ?? ""),
   );
+  const classSubjectLabels = Object.fromEntries(
+    classSubjects.map((cs) => [
+      String(cs.id),
+      `${cs.className} · ${cs.subjectName}`,
+    ]),
+  );
 
   React.useEffect(() => {
     if (state?.ok) {
@@ -112,7 +118,11 @@ export function AssignmentForm({
             disabled={classSubjects.length === 0}
           >
             <SelectTrigger className="h-10 w-full">
-              <SelectValue placeholder="Select class & subject" />
+              <SelectValue>
+                {(v) =>
+                  v ? classSubjectLabels[v] ?? v : "Select class & subject"
+                }
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {classSubjects.map((cs) => (

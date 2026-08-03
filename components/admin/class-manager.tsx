@@ -43,6 +43,12 @@ export function ClassManager({ classId, subjects, teachers, rows }: Props) {
   const [teacherSel, setTeacherSel] = React.useState<Record<number, string>>(
     {},
   );
+  const subjectLabels = Object.fromEntries(
+    subjects.map((s) => [String(s.id), s.name]),
+  );
+  const teacherLabels = Object.fromEntries(
+    teachers.map((t) => [String(t.id), t.name]),
+  );
 
   async function addSubject() {
     if (!subjectId) {
@@ -97,7 +103,9 @@ export function ClassManager({ classId, subjects, teachers, rows }: Props) {
           </span>
           <Select value={subjectId} onValueChange={(v) => setSubjectId(v ?? "")}>
             <SelectTrigger className="h-9 w-full">
-              <SelectValue placeholder="Select subject" />
+              <SelectValue>
+                {(v) => (v ? subjectLabels[v] ?? v : "Select subject")}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {subjects.map((s) => (
@@ -164,7 +172,9 @@ export function ClassManager({ classId, subjects, teachers, rows }: Props) {
                     }
                   >
                     <SelectTrigger size="sm" className="h-7 w-44">
-                      <SelectValue placeholder="Assign teacher" />
+                      <SelectValue>
+                        {(v) => (v ? teacherLabels[v] ?? v : "Assign teacher")}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {teachers.map((t) => (

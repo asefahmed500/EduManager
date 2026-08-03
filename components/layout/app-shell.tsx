@@ -12,6 +12,7 @@ import {
   LayoutDashboardIcon,
   PlusIcon,
   SettingsIcon,
+  UserIcon,
   UsersIcon,
   type LucideIcon,
 } from "lucide-react";
@@ -68,6 +69,10 @@ const NAV: Record<string, NavGroup[]> = {
         { title: "Settings", href: "/admin/settings", icon: SettingsIcon },
       ],
     },
+    {
+      label: "Account",
+      items: [{ title: "Profile", href: "/admin/profile", icon: UserIcon }],
+    },
   ],
   TEACHER: [
     {
@@ -83,6 +88,10 @@ const NAV: Record<string, NavGroup[]> = {
         { title: "New assignment", href: "/teacher/assignments/create", icon: PlusIcon },
       ],
     },
+    {
+      label: "Account",
+      items: [{ title: "Profile", href: "/teacher/profile", icon: UserIcon }],
+    },
   ],
   STUDENT: [
     {
@@ -92,6 +101,10 @@ const NAV: Record<string, NavGroup[]> = {
         { title: "Assignments", href: "/student/assignments", icon: ClipboardListIcon },
         { title: "My Submissions", href: "/student/submissions", icon: InboxIcon },
       ],
+    },
+    {
+      label: "Account",
+      items: [{ title: "Profile", href: "/student/profile", icon: UserIcon }],
     },
   ],
 };

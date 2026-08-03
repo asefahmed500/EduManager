@@ -40,6 +40,12 @@ export function GradeForm({ submissionId, maxMarks, defaults }: Props) {
       ? defaults.status
       : "GRADED",
   );
+  const statusLabels: Record<string, string> = {
+    GRADED: "Graded",
+    RETURNED: "Returned",
+    SUBMITTED: "Submitted",
+    LATE: "Late",
+  };
 
   React.useEffect(() => {
     if (state?.ok) {
@@ -78,7 +84,9 @@ export function GradeForm({ submissionId, maxMarks, defaults }: Props) {
             onValueChange={(v) => setStatus(v ?? "GRADED")}
           >
             <SelectTrigger className="h-10 w-full">
-              <SelectValue />
+              <SelectValue>
+                {(v) => (v ? statusLabels[v] ?? v : "Graded")}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="GRADED">Graded</SelectItem>

@@ -55,6 +55,14 @@ export function UserFormDialog({ user, classes, trigger }: Props) {
   const [classId, setClassId] = React.useState(
     user?.classId ? String(user.classId) : "",
   );
+  const roleLabels: Record<string, string> = {
+    ADMIN: "Administrator",
+    TEACHER: "Teacher",
+    STUDENT: "Student",
+  };
+  const classLabels = Object.fromEntries(
+    classes.map((c) => [String(c.id), c.name]),
+  );
 
   React.useEffect(() => {
     if (state?.ok) {
@@ -131,7 +139,9 @@ export function UserFormDialog({ user, classes, trigger }: Props) {
             <FieldLabel>Role</FieldLabel>
             <Select value={role} onValueChange={(v) => setRole(v ?? "STUDENT")}>
               <SelectTrigger className="h-10 w-full">
-                <SelectValue />
+                <SelectValue>
+                  {(v) => (v ? roleLabels[v] ?? v : "Select role")}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ADMIN">Administrator</SelectItem>
@@ -149,7 +159,9 @@ export function UserFormDialog({ user, classes, trigger }: Props) {
                 onValueChange={(v) => setClassId(v ?? "")}
               >
                 <SelectTrigger className="h-10 w-full">
-                  <SelectValue placeholder="Select class" />
+                  <SelectValue>
+                    {(v) => (v ? classLabels[v] ?? v : "Select class")}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {classes.map((c) => (

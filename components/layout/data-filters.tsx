@@ -78,25 +78,32 @@ export function DataFilters({
         </form>
       ) : null}
 
-      {filters.map((f) => (
-        <Select
-          key={f.key}
-          value={current[f.key] ?? ""}
-          onValueChange={(v) => onFilter(f.key, v)}
-        >
-          <SelectTrigger className="h-9 w-48">
-            <SelectValue placeholder={f.placeholder} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="">{f.placeholder}</SelectItem>
-            {f.options.map((o) => (
-              <SelectItem key={o.value} value={o.value}>
-                {o.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      ))}
+      {filters.map((f) => {
+        const labelMap = Object.fromEntries(
+          f.options.map((o) => [o.value, o.label]),
+        );
+        return (
+          <Select
+            key={f.key}
+            value={current[f.key] ?? ""}
+            onValueChange={(v) => onFilter(f.key, v)}
+          >
+            <SelectTrigger className="h-9 w-48">
+              <SelectValue>
+                {(v) => (v ? labelMap[v] ?? v : f.placeholder)}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">{f.placeholder}</SelectItem>
+              {f.options.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        );
+      })}
 
       {hasActive ? (
         <Button

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { ChevronsUpDownIcon, LogOutIcon } from "lucide-react";
+import { ChevronsUpDownIcon, LogOutIcon, UserIcon } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -83,6 +83,15 @@ export function UserMenu({ name, email, role }: Props) {
         <div className="px-2 py-1.5 text-xs uppercase tracking-[0.08em] text-muted-foreground">
           {ROLE_LABEL[role]}
         </div>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuItem
+            onClick={() => router.push(`/${role.toLowerCase()}/profile`)}
+            className="gap-2"
+          >
+            <UserIcon className="size-4" /> Profile
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem

@@ -16,6 +16,7 @@ const ADMIN_PAGES = [
   { path: "/admin/assignments", heading: "Assignments" },
   { path: "/admin/submissions", heading: "Submissions" },
   { path: "/admin/settings", heading: "Settings" },
+  { path: "/admin/profile", heading: "Profile" },
   { path: "/notifications", heading: "Notifications" },
 ];
 
@@ -23,12 +24,14 @@ const TEACHER_PAGES = [
   { path: "/teacher/dashboard", heading: "Dashboard" },
   { path: "/teacher/assignments", heading: "Assignments" },
   { path: "/teacher/assignments/create", heading: "New assignment" },
+  { path: "/teacher/profile", heading: "Profile" },
 ];
 
 const STUDENT_PAGES = [
   { path: "/student/dashboard", heading: "Dashboard" },
   { path: "/student/assignments", heading: "Assignments" },
   { path: "/student/submissions", heading: "My submissions" },
+  { path: "/student/profile", heading: "Profile" },
 ];
 
 async function roleContext(browser: Browser) {
