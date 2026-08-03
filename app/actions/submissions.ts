@@ -12,7 +12,6 @@ import type { SubmissionStatus } from "@/lib/generated/prisma/client";
 import { canStudentEditSubmission, isMarksValid } from "@/lib/rules";
 import { createNotifications } from "@/lib/notify";
 
-const MAX_BYTES = (Number(process.env.MAX_UPLOAD_MB) || 10) * 1024 * 1024;
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "public/uploads";
 const ALLOWED_EXT = [
   ".pdf",
@@ -62,9 +61,17 @@ export async function submitAssignment(
   let fileUrl: string | undefined;
   if (hasFile) {
     const f = file as File;
-    if (f.size > MAX_BYTES) {
+    const maxUploadSetting = await prisma.setting.findUnique({
+      where: { key: "maxUploadMb" },
+    });
+    const maxUploadMb =
+      Number(maxUploadSetting?.value) ||
+      Number(process.env.MAX_UPLOAD_MB) ||
+      10;
+    const maxBytes = maxUploadMb * 1024 * 1024;
+    if (f.size > maxBytes) {
       return {
-        error: `File exceeds the ${process.env.MAX_UPLOAD_MB || 10}MB limit.`,
+        error: `File exceeds the ${maxUploadMb}MB limit.`,
       };
     }
     const ext = path.extname(f.name).toLowerCase();
@@ -188,6 +195,35 @@ export async function gradeSubmission(
   revalidatePath(
     `/teacher/assignments/${submission.assignmentId}/submissions/${submissionId}`,
   );
+  revalidatePath("/student/dashboard");
+  return { ok: true };
+}
+
+export async function deleteSubmission(id: number): Promise<FormState> {
+  const user = await requireRole("STUDENT");
+  const submission = await prisma.submission.findUnique({ where: { id } });
+  if (!submission || submission.studentId !== user.id) {
+    return { error: "Submission not found." };
+  }
+  if (submission.status === "GRADED") {
+    return { error: "A graded submission cannot be deleted." };
+  }
+  const assignment = await prisma.assignment.findUnique({
+    where: { id: submission.assignmentId },
+  });
+  if (!assignment) return { error: "Assignment not found." };
+
+  const now = new Date();
+  if (now > assignment.deadline && !assignment.allowLate) {
+    return {
+      error:
+        "The deadline has passed and this assignment does not allow late submissions.",
+    };
+  }
+
+  await prisma.submission.delete({ where: { id } });
+  revalidatePath(`/student/assignments/${submission.assignmentId}`);
+  revalidatePath("/student/submissions");
   revalidatePath("/student/dashboard");
   return { ok: true };
 }

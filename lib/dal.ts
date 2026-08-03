@@ -28,7 +28,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
   const payload = await verifySession();
   if (!payload) return null;
   const user = await prisma.user.findUnique({
-    where: { id: payload.userId },
+    where: { id: payload.userId, isDeleted: false },
     select: {
       id: true,
       name: true,

@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/dal";
 import { PageHeader } from "@/components/layout/page-header";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { SubmissionStatusBadge } from "@/components/dashboard/status-badge";
 import { cn } from "@/lib/utils";
@@ -18,13 +19,14 @@ const FILTERS = [
 export default async function StudentAssignments({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; q?: string }>;
 }) {
   const user = await requireRole("STUDENT");
   const sp = await searchParams;
   const filter = FILTERS.some((f) => f.key === sp.status)
     ? (sp.status as string)
     : "all";
+  const q = sp.q?.trim();
 
   if (!user.classId) {
     return (
@@ -40,7 +42,13 @@ export default async function StudentAssignments({
   }
 
   const assignments = await prisma.assignment.findMany({
-    where: { classId: user.classId, status: "PUBLISHED" },
+    where: {
+      classId: user.classId,
+      status: "PUBLISHED",
+      ...(q
+        ? { title: { contains: q, mode: "insensitive" as const } }
+        : {}),
+    },
     orderBy: { deadline: "asc" },
     include: {
       subject: true,
@@ -69,6 +77,18 @@ export default async function StudentAssignments({
         title="Assignments"
         description="Published assignments for your class."
       />
+
+      <form method="get" className="flex w-full max-w-md items-center gap-2">
+        <input
+          name="q"
+          defaultValue={q}
+          placeholder="Search by title…"
+          className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+        />
+        <Button type="submit" variant="outline" className="h-9">
+          Search
+        </Button>
+      </form>
 
       <div className="flex flex-wrap gap-1">
         {FILTERS.map((f) => {

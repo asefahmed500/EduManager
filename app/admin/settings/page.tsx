@@ -4,10 +4,15 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { SettingsEditor } from "@/components/admin/settings-editor";
 
+const CURRENT_YEAR = new Date().getFullYear();
+
 const DEFAULTS = [
   { key: "siteName", value: "EduManager" },
+  { key: "academicYear", value: `${CURRENT_YEAR}-${CURRENT_YEAR + 1}` },
   { key: "maxUploadMb", value: "10" },
   { key: "allowLateDefault", value: "false" },
+  { key: "notificationInApp", value: "true" },
+  { key: "notificationEmail", value: "false" },
 ];
 
 export default async function AdminSettings() {

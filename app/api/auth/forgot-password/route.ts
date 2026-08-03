@@ -15,7 +15,7 @@ export async function POST(req: Request) {
 
   const { email } = parsed.data;
   const user = await prisma.user.findUnique({ where: { email } });
-  if (user && user.isActive) {
+  if (user && user.isActive && !user.isDeleted) {
     const token = randomBytes(32).toString("hex");
     await prisma.user.update({
       where: { id: user.id },

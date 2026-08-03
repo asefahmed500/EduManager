@@ -108,7 +108,11 @@ export async function deleteUser(id: number): Promise<FormState> {
   await requireRole("ADMIN");
   const target = await prisma.user.findUnique({ where: { id } });
   if (!target) return { error: "User not found." };
-  await prisma.user.delete({ where: { id } });
+  // Soft delete: keep the account row so audit/history references stay valid.
+  await prisma.user.update({
+    where: { id },
+    data: { isDeleted: true, isActive: false },
+  });
   revalidatePath("/admin/users");
   revalidatePath("/admin/dashboard");
   return { ok: true };

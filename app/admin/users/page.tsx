@@ -1,61 +1,27 @@
-import { PlusIcon } from "lucide-react";
+﻿import { PlusIcon } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/dal";
+import { buildUrl } from "@/lib/url";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { DataFilters } from "@/components/layout/data-filters";
+import { Pagination } from "@/components/layout/pagination";
 import { UserFormDialog } from "@/components/admin/user-form-dialog";
 import { RowDeleteButton } from "@/components/admin/row-delete-button";
 import { ActivateButton } from "@/components/admin/activate-button";
 import { deleteUser } from "@/app/actions/admin";
-import { cn } from "@/lib/utils";
 import type { Role } from "@/lib/generated/prisma/client";
 
 const ROLES = ["ADMIN", "TEACHER", "STUDENT"] as const;
-
-function buildUrl(
-  current: URLSearchParams,
-  overrides: Record<string, string>,
-): string {
-  const p = new URLSearchParams(current);
-  for (const [key, value] of Object.entries(overrides)) {
-    if (value) p.set(key, value);
-    else p.delete(key);
-  }
-  const s = p.toString();
-  return s ? `/admin/users?${s}` : "/admin/users";
-}
-
-function FilterChip({
-  href,
-  active,
-  children,
-}: {
-  href: string;
-  active: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <a
-      href={href}
-      className={cn(
-        "rounded-md px-3 py-1.5 text-sm transition-colors",
-        active
-          ? "bg-primary text-primary-foreground"
-          : "text-muted-foreground hover:bg-muted",
-      )}
-    >
-      {children}
-    </a>
-  );
-}
+const PER_PAGE = 10;
 
 export default async function AdminUsers({
   searchParams,
 }: {
-  searchParams: Promise<{ role?: string; status?: string; q?: string }>;
+  searchParams: Promise<{ role?: string; status?: string; q?: string; page?: string }>;
 }) {
   await requireRole("ADMIN");
   const sp = await searchParams;
@@ -65,8 +31,10 @@ export default async function AdminUsers({
   const status =
     sp.status === "active" || sp.status === "inactive" ? sp.status : undefined;
   const q = sp.q?.trim();
+  const page = Math.max(1, Number(sp.page) || 1);
 
   const where = {
+    isDeleted: false,
     ...(role ? { role } : {}),
     ...(status === "active"
       ? { isActive: true }
@@ -83,12 +51,21 @@ export default async function AdminUsers({
       : {}),
   };
 
-  const [users, classes] = await Promise.all([
-    prisma.user.findMany({ where, orderBy: { createdAt: "desc" } }),
+  const [users, classes, total] = await Promise.all([
+    prisma.user.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * PER_PAGE,
+      take: PER_PAGE,
+    }),
     prisma.class.findMany({ orderBy: { name: "asc" } }),
+    prisma.user.count({ where }),
   ]);
+  const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
   const classMap = new Map(classes.map((c) => [c.id, c.name]));
   const params = new URLSearchParams(sp);
+  const makeHref = (p: number) =>
+    buildUrl("/admin/users", params, { page: String(p) });
 
   return (
     <div className="flex flex-col gap-6">
@@ -106,69 +83,29 @@ export default async function AdminUsers({
         />
       </PageHeader>
 
-      <div className="flex flex-col gap-3">
-        <form method="get" className="flex w-full max-w-md items-center gap-2">
-          <input
-            name="q"
-            defaultValue={q}
-            placeholder="Search by name or email…"
-            className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-          />
-          <Button type="submit" variant="outline" className="h-9">
-            Search
-          </Button>
-          {q ? (
-            <Button
-              type="submit"
-              variant="ghost"
-              className="h-9"
-              name="q"
-              value=""
-            >
-              Clear
-            </Button>
-          ) : null}
-        </form>
-
-        <div className="flex flex-wrap gap-1">
-          <FilterChip
-            href={buildUrl(params, { role: "" })}
-            active={!role}
-          >
-            All roles
-          </FilterChip>
-          {ROLES.map((r) => (
-            <FilterChip
-              key={r}
-              href={buildUrl(params, { role: r })}
-              active={role === r}
-            >
-              {r.charAt(0) + r.slice(1).toLowerCase()}
-            </FilterChip>
-          ))}
-        </div>
-
-        <div className="flex flex-wrap gap-1">
-          <FilterChip
-            href={buildUrl(params, { status: "" })}
-            active={!status}
-          >
-            All statuses
-          </FilterChip>
-          <FilterChip
-            href={buildUrl(params, { status: "active" })}
-            active={status === "active"}
-          >
-            Active
-          </FilterChip>
-          <FilterChip
-            href={buildUrl(params, { status: "inactive" })}
-            active={status === "inactive"}
-          >
-            Inactive
-          </FilterChip>
-        </div>
-      </div>
+      <DataFilters
+        basePath="/admin/users"
+        searchPlaceholder="Search by name or email…"
+        filters={[
+          {
+            key: "role",
+            placeholder: "All roles",
+            options: ROLES.map((r) => ({
+              label: r.charAt(0) + r.slice(1).toLowerCase(),
+              value: r,
+            })),
+          },
+          {
+            key: "status",
+            placeholder: "All statuses",
+            options: [
+              { label: "Active", value: "active" },
+              { label: "Inactive", value: "inactive" },
+            ],
+          },
+        ]}
+        current={sp as Record<string, string>}
+      />
 
       <Card>
         <CardContent className="p-0">
@@ -221,13 +158,19 @@ export default async function AdminUsers({
                   <RowDeleteButton
                     id={u.id}
                     action={deleteUser}
-                    confirmMessage={`Delete ${u.name}? This cannot be undone.`}
+                    confirmMessage={`Delete ${u.name}? This account will be deactivated.`}
                   />
                 </li>
               ))}
             </ul>
           )}
         </CardContent>
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          totalItems={total}
+          makeHref={makeHref}
+        />
       </Card>
     </div>
   );

@@ -55,7 +55,9 @@ describe("admin module", () => {
     expect((await prisma.user.findUnique({ where: { id: user!.id } }))?.name).toBe("User One Edit");
 
     await deleteUser(user!.id);
-    expect(await prisma.user.findUnique({ where: { id: user!.id } })).toBeNull();
+    const deleted = await prisma.user.findUnique({ where: { id: user!.id } });
+    expect(deleted?.isDeleted).toBe(true);
+    expect(deleted?.isActive).toBe(false);
   });
 
   it("creates, edits and deletes classes with subject mapping and teacher assignment", async () => {

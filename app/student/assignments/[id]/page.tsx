@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SubmissionStatusBadge } from "@/components/dashboard/status-badge";
 import { SubmissionForm } from "@/components/assignments/submission-form";
+import { DeleteSubmissionButton } from "@/components/assignments/delete-submission-button";
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -116,6 +117,11 @@ export default async function StudentAssignmentDetail({
                       : undefined
                   }
                 />
+                {mine ? (
+                  <div className="mt-2 flex justify-end">
+                    <DeleteSubmissionButton submissionId={mine.id} />
+                  </div>
+                ) : null}
               </CardContent>
             </Card>
           ) : (

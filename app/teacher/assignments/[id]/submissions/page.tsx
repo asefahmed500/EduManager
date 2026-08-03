@@ -6,8 +6,8 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/dal";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent } from "@/components/ui/card";
+import { DataFilters } from "@/components/layout/data-filters";
 import { SubmissionStatusBadge } from "@/components/dashboard/status-badge";
-import { cn } from "@/lib/utils";
 import type { SubmissionStatus } from "@/lib/generated/prisma/client";
 
 const FILTERS = [
@@ -23,7 +23,7 @@ export default async function AssignmentSubmissions({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; q?: string }>;
 }) {
   const user = await requireRole("TEACHER");
   const { id } = await params;
@@ -42,9 +42,16 @@ export default async function AssignmentSubmissions({
   )
     ? (sp.status as SubmissionStatus)
     : undefined;
+  const q = sp.q?.trim();
 
   const submissions = await prisma.submission.findMany({
-    where: { assignmentId: assignment.id, ...(status ? { status } : {}) },
+    where: {
+      assignmentId: assignment.id,
+      ...(status ? { status } : {}),
+      ...(q
+        ? { student: { name: { contains: q, mode: "insensitive" as const } } }
+        : {}),
+    },
     orderBy: { submittedAt: "desc" },
     include: { student: true },
   });
@@ -56,29 +63,21 @@ export default async function AssignmentSubmissions({
         description={`${assignment.title} — ${assignment.class.name} · ${assignment.subject.name}`}
       />
 
-      <div className="flex flex-wrap gap-1">
-        {FILTERS.map((f) => {
-          const active = f.key === (status ?? "");
-          return (
-            <Link
-              key={f.key || "all"}
-              href={
-                f.key
-                  ? `/teacher/assignments/${assignment.id}/submissions?status=${f.key}`
-                  : `/teacher/assignments/${assignment.id}/submissions`
-              }
-              className={cn(
-                "rounded-md px-3 py-1.5 text-sm transition-colors",
-                active
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted",
-              )}
-            >
-              {f.label}
-            </Link>
-          );
-        })}
-      </div>
+      <DataFilters
+        basePath={`/teacher/assignments/${assignment.id}/submissions`}
+        searchPlaceholder="Search by student name…"
+        filters={[
+          {
+            key: "status",
+            placeholder: "All statuses",
+            options: FILTERS.filter((f) => f.key).map((f) => ({
+              label: f.label,
+              value: f.key,
+            })),
+          },
+        ]}
+        current={sp as Record<string, string>}
+      />
 
       <Card>
         <CardContent className="p-0">

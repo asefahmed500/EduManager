@@ -1,18 +1,53 @@
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/dal";
+import { buildUrl } from "@/lib/url";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent } from "@/components/ui/card";
+import { DataFilters } from "@/components/layout/data-filters";
+import { Pagination } from "@/components/layout/pagination";
 import { SubmissionStatusBadge } from "@/components/dashboard/status-badge";
+import type { SubmissionStatus } from "@/lib/generated/prisma/client";
 
-export default async function AdminSubmissions() {
+const PER_PAGE = 10;
+
+const STATUSES: { label: string; value: SubmissionStatus }[] = [
+  { label: "Submitted", value: "SUBMITTED" },
+  { label: "Graded", value: "GRADED" },
+  { label: "Late", value: "LATE" },
+  { label: "Returned", value: "RETURNED" },
+];
+
+export default async function AdminSubmissions({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string; page?: string }>;
+}) {
   await requireRole("ADMIN");
-  const submissions = await prisma.submission.findMany({
-    orderBy: { submittedAt: "desc" },
-    include: {
-      student: true,
-      assignment: { include: { subject: true } },
-    },
-  });
+  const sp = await searchParams;
+  const status = STATUSES.some((s) => s.value === sp.status)
+    ? (sp.status as SubmissionStatus)
+    : undefined;
+  const page = Math.max(1, Number(sp.page) || 1);
+
+  const where = { ...(status ? { status } : {}) };
+
+  const [submissions, total] = await Promise.all([
+    prisma.submission.findMany({
+      where,
+      orderBy: { submittedAt: "desc" },
+      skip: (page - 1) * PER_PAGE,
+      take: PER_PAGE,
+      include: {
+        student: true,
+        assignment: { include: { subject: true } },
+      },
+    }),
+    prisma.submission.count({ where }),
+  ]);
+  const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
+  const params = new URLSearchParams(sp);
+  const makeHref = (p: number) =>
+    buildUrl("/admin/submissions", params, { page: String(p) });
 
   return (
     <div className="flex flex-col gap-6">
@@ -20,11 +55,24 @@ export default async function AdminSubmissions() {
         title="Submissions"
         description="Every submission across the system."
       />
+
+      <DataFilters
+        basePath="/admin/submissions"
+        filters={[
+          {
+            key: "status",
+            placeholder: "All statuses",
+            options: STATUSES.map((s) => ({ label: s.label, value: s.value })),
+          },
+        ]}
+        current={sp as Record<string, string>}
+      />
+
       <Card>
         <CardContent className="p-0">
           {submissions.length === 0 ? (
             <p className="p-10 text-center text-sm text-muted-foreground">
-              No submissions yet.
+              No submissions match these filters.
             </p>
           ) : (
             <ul className="divide-y divide-border">
@@ -52,6 +100,12 @@ export default async function AdminSubmissions() {
             </ul>
           )}
         </CardContent>
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          totalItems={total}
+          makeHref={makeHref}
+        />
       </Card>
     </div>
   );
