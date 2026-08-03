@@ -62,3 +62,7 @@ skills-lock.json
 
 # dev server logs
 *.log
+
+# playwright-cli workspace
+.playwright-cli/
+.playwright/
