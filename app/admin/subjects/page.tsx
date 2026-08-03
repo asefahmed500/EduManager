@@ -1,10 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/dal";
 import { PageHeader } from "@/components/layout/page-header";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SimpleForm } from "@/components/admin/simple-form";
 import { RowDeleteButton } from "@/components/admin/row-delete-button";
-import { createSubject, deleteSubject } from "@/app/actions/admin";
+import { EditEntityDialog } from "@/components/admin/edit-entity-dialog";
+import { createSubject, deleteSubject, updateSubject } from "@/app/actions/admin";
 
 export default async function AdminSubjects() {
   await requireRole("ADMIN");
@@ -56,6 +58,24 @@ export default async function AdminSubjects() {
                       {s._count.classSubjects} class(es)
                     </p>
                   </div>
+                  <EditEntityDialog
+                    id={s.id}
+                    title="Edit subject"
+                    action={updateSubject}
+                    fields={[
+                      { name: "name", label: "Name", defaultValue: s.name },
+                      {
+                        name: "code",
+                        label: "Code (optional)",
+                        defaultValue: s.code ?? "",
+                      },
+                    ]}
+                    trigger={
+                      <Button variant="ghost" size="sm" className="h-8">
+                        Edit
+                      </Button>
+                    }
+                  />
                   <RowDeleteButton
                     id={s.id}
                     action={deleteSubject}

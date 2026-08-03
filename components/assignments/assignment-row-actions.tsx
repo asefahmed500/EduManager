@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import {
+  CopyIcon,
   EyeIcon,
   MoreHorizontalIcon,
   SendIcon,
@@ -18,7 +19,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { notify } from "@/lib/toast";
-import { deleteAssignment, togglePublish } from "@/app/actions/assignments";
+import {
+  deleteAssignment,
+  duplicateAssignment,
+  togglePublish,
+} from "@/app/actions/assignments";
 
 type Props = {
   id: number;
@@ -66,6 +71,13 @@ export function AssignmentRowActions({ id, published }: Props) {
         >
           <SendIcon className="size-4" />
           {published ? "Unpublish" : "Publish"}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => {
+            run(duplicateAssignment, "Assignment duplicated as a draft.");
+          }}
+        >
+          <CopyIcon className="size-4" /> Duplicate
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem

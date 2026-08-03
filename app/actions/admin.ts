@@ -227,3 +227,63 @@ export async function updateSetting(
   revalidatePath("/admin/settings");
   return { ok: true };
 }
+
+const classEditSchema = z.object({
+  id: z.coerce.number().int().positive(),
+  name: z.string().min(1, "Name is required").max(100),
+  description: z
+    .string()
+    .max(500)
+    .optional()
+    .transform((v) => v || null),
+});
+
+export async function updateClass(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  await requireRole("ADMIN");
+  const parsed = classEditSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { errors: flatten(parsed.error.flatten()) };
+  const { id, name, description } = parsed.data;
+
+  const existing = await prisma.class.findUnique({ where: { id } });
+  if (!existing) return { error: "Class not found." };
+  const dup = await prisma.class.findUnique({ where: { name } });
+  if (dup && dup.id !== id) {
+    return { error: "A class with this name already exists." };
+  }
+
+  await prisma.class.update({ where: { id }, data: { name, description } });
+  revalidatePath("/admin/classes");
+  revalidatePath("/admin/dashboard");
+  return { ok: true };
+}
+
+const subjectEditSchema = z.object({
+  id: z.coerce.number().int().positive(),
+  name: z.string().min(1, "Name is required").max(100),
+  code: z
+    .string()
+    .max(20)
+    .optional()
+    .transform((v) => v || null),
+});
+
+export async function updateSubject(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  await requireRole("ADMIN");
+  const parsed = subjectEditSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { errors: flatten(parsed.error.flatten()) };
+  const { id, name, code } = parsed.data;
+
+  const existing = await prisma.subject.findUnique({ where: { id } });
+  if (!existing) return { error: "Subject not found." };
+
+  await prisma.subject.update({ where: { id }, data: { name, code } });
+  revalidatePath("/admin/subjects");
+  revalidatePath("/admin/classes");
+  return { ok: true };
+}

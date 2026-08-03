@@ -7,29 +7,47 @@ import { requireRole } from "@/lib/dal";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { SubmissionStatusBadge } from "@/components/dashboard/status-badge";
+import { cn } from "@/lib/utils";
+import type { SubmissionStatus } from "@/lib/generated/prisma/client";
+
+const FILTERS = [
+  { key: "", label: "All" },
+  { key: "SUBMITTED", label: "Submitted" },
+  { key: "GRADED", label: "Graded" },
+  { key: "LATE", label: "Late" },
+  { key: "RETURNED", label: "Returned" },
+] as const;
 
 export default async function AssignmentSubmissions({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ status?: string }>;
 }) {
   const user = await requireRole("TEACHER");
   const { id } = await params;
+  const sp = await searchParams;
 
   const assignment = await prisma.assignment.findUnique({
     where: { id: Number(id) },
-    include: {
-      class: true,
-      subject: true,
-      submissions: {
-        include: { student: true },
-        orderBy: { submittedAt: "desc" },
-      },
-    },
+    include: { class: true, subject: true },
   });
   if (!assignment || assignment.teacherId !== user.id) {
     notFound();
   }
+
+  const status: SubmissionStatus | undefined = FILTERS.some(
+    (f) => f.key === sp.status && f.key !== "",
+  )
+    ? (sp.status as SubmissionStatus)
+    : undefined;
+
+  const submissions = await prisma.submission.findMany({
+    where: { assignmentId: assignment.id, ...(status ? { status } : {}) },
+    orderBy: { submittedAt: "desc" },
+    include: { student: true },
+  });
 
   return (
     <div className="flex flex-col gap-6">
@@ -37,15 +55,40 @@ export default async function AssignmentSubmissions({
         title="Submissions"
         description={`${assignment.title} — ${assignment.class.name} · ${assignment.subject.name}`}
       />
+
+      <div className="flex flex-wrap gap-1">
+        {FILTERS.map((f) => {
+          const active = f.key === (status ?? "");
+          return (
+            <Link
+              key={f.key || "all"}
+              href={
+                f.key
+                  ? `/teacher/assignments/${assignment.id}/submissions?status=${f.key}`
+                  : `/teacher/assignments/${assignment.id}/submissions`
+              }
+              className={cn(
+                "rounded-md px-3 py-1.5 text-sm transition-colors",
+                active
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted",
+              )}
+            >
+              {f.label}
+            </Link>
+          );
+        })}
+      </div>
+
       <Card>
         <CardContent className="p-0">
-          {assignment.submissions.length === 0 ? (
+          {submissions.length === 0 ? (
             <p className="p-10 text-center text-sm text-muted-foreground">
-              No submissions yet.
+              No submissions{status ? ` with status "${status.toLowerCase()}"` : ""} yet.
             </p>
           ) : (
             <ul className="divide-y divide-border">
-              {assignment.submissions.map((s) => (
+              {submissions.map((s) => (
                 <li
                   key={s.id}
                   className="flex items-center gap-3 px-4 py-3 md:px-6"

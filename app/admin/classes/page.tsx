@@ -1,11 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/dal";
 import { PageHeader } from "@/components/layout/page-header";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SimpleForm } from "@/components/admin/simple-form";
 import { RowDeleteButton } from "@/components/admin/row-delete-button";
+import { EditEntityDialog } from "@/components/admin/edit-entity-dialog";
 import { ClassManager } from "@/components/admin/class-manager";
-import { createClass, deleteClass } from "@/app/actions/admin";
+import { createClass, deleteClass, updateClass } from "@/app/actions/admin";
 
 export default async function AdminClasses() {
   await requireRole("ADMIN");
@@ -65,11 +67,31 @@ export default async function AdminClasses() {
                   {c.description ?? "—"} · {c._count.students} students
                 </p>
               </div>
-              <RowDeleteButton
-                id={c.id}
-                action={deleteClass}
-                confirmMessage={`Delete class ${c.name}?`}
-              />
+              <div className="flex items-center gap-1">
+                <EditEntityDialog
+                  id={c.id}
+                  title="Edit class"
+                  action={updateClass}
+                  fields={[
+                    { name: "name", label: "Name", defaultValue: c.name },
+                    {
+                      name: "description",
+                      label: "Description (optional)",
+                      defaultValue: c.description ?? "",
+                    },
+                  ]}
+                  trigger={
+                    <Button variant="ghost" size="sm" className="h-8">
+                      Edit
+                    </Button>
+                  }
+                />
+                <RowDeleteButton
+                  id={c.id}
+                  action={deleteClass}
+                  confirmMessage={`Delete class ${c.name}?`}
+                />
+              </div>
             </CardHeader>
             <CardContent>
               <ClassManager

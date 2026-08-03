@@ -172,3 +172,26 @@ export async function togglePublish(id: number): Promise<FormState> {
   revalidatePath(`/teacher/assignments/${id}`);
   return { ok: true };
 }
+
+export async function duplicateAssignment(id: number): Promise<FormState> {
+  const user = await requireRole("TEACHER");
+  const assignment = await prisma.assignment.findUnique({ where: { id } });
+  if (!assignment || assignment.teacherId !== user.id) {
+    return { error: "Assignment not found." };
+  }
+  const created = await prisma.assignment.create({
+    data: {
+      title: `${assignment.title} (Copy)`,
+      description: assignment.description,
+      classId: assignment.classId,
+      subjectId: assignment.subjectId,
+      teacherId: user.id,
+      deadline: assignment.deadline,
+      maxMarks: assignment.maxMarks,
+      allowLate: assignment.allowLate,
+      status: "DRAFT",
+    },
+  });
+  revalidatePath("/teacher/assignments");
+  return { ok: true, id: created.id };
+}
