@@ -1,0 +1,182 @@
+// Prisma schema for EduManager — Assignment & Submission Management System
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------- Enums ----------
+
+enum Role {
+  ADMIN
+  TEACHER
+  STUDENT
+}
+
+enum AssignmentStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum SubmissionStatus {
+  NOT_SUBMITTED
+  SUBMITTED
+  GRADED
+  RETURNED
+  LATE
+}
+
+// ---------- Core ----------
+
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role
+  isActive     Boolean  @default(true)
+  classId      Int?
+  class        Class?   @relation("ClassStudents", fields: [classId], references: [id])
+  resetToken       String?   @unique
+  resetTokenExpires DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  assignments          Assignment[]         @relation("TeacherAssignments")
+  submissions          Submission[]         @relation("StudentSubmissions")
+  gradedSubmissions    Submission[]         @relation("GradedBy")
+  teacherAssignments   TeacherSubjectClass[] @relation("TeacherSubjectClasses")
+  notifications        Notification[]
+
+  @@index([role])
+  @@index([classId])
+}
+
+model Class {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  students      User[]    @relation("ClassStudents")
+  classSubjects ClassSubject[]
+  assignments   Assignment[]
+}
+
+model Subject {
+  id        Int      @id @default(autoincrement())
+  name      String
+  code      String?  @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  classSubjects ClassSubject[]
+  assignments   Assignment[]
+}
+
+// Admin maps a Subject to a Class
+model ClassSubject {
+  id        Int @id @default(autoincrement())
+  classId   Int
+  subjectId Int
+
+  class   Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  teachers TeacherSubjectClass[]
+
+  @@unique([classId, subjectId])
+  @@index([subjectId])
+}
+
+// Admin assigns a Teacher to a (Class + Subject) pair
+model TeacherSubjectClass {
+  id            Int      @id @default(autoincrement())
+  teacherId     Int
+  classSubjectId Int
+  createdAt     DateTime @default(now())
+
+  teacher      User        @relation("TeacherSubjectClasses", fields: [teacherId], references: [id])
+  classSubject ClassSubject @relation(fields: [classSubjectId], references: [id], onDelete: Cascade)
+
+  @@unique([teacherId, classSubjectId])
+  @@index([classSubjectId])
+}
+
+model Assignment {
+  id          Int              @id @default(autoincrement())
+  title       String
+  description String
+  classId     Int
+  subjectId   Int
+  teacherId   Int
+  deadline    DateTime
+  maxMarks    Int
+  status      AssignmentStatus @default(DRAFT)
+  allowLate   Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  class     Class    @relation(fields: [classId], references: [id])
+  subject   Subject  @relation(fields: [subjectId], references: [id])
+  teacher   User     @relation("TeacherAssignments", fields: [teacherId], references: [id])
+  submissions Submission[]
+
+  @@index([classId])
+  @@index([subjectId])
+  @@index([teacherId])
+  @@index([status])
+}
+
+model Submission {
+  id          Int               @id @default(autoincrement())
+  assignmentId Int
+  studentId   Int
+  answer      String
+  fileUrl     String?
+  status      SubmissionStatus  @default(NOT_SUBMITTED)
+  marks       Int?
+  feedback    String?
+  gradedAt    DateTime?
+  gradedById  Int?
+  submittedAt DateTime?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  student    User        @relation("StudentSubmissions", fields: [studentId], references: [id])
+  gradedBy   User?       @relation("GradedBy", fields: [gradedById], references: [id])
+
+  @@unique([assignmentId, studentId])
+  @@index([studentId])
+  @@index([status])
+}
+
+model Setting {
+  id    Int      @id @default(autoincrement())
+  key   String   @unique
+  value String
+  updatedAt DateTime @updatedAt
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  title     String
+  message   String
+  type      String   @default("INFO")
+  link      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, read])
+}
