@@ -59,6 +59,15 @@ Next.js **16.2.6** (App Router, Turbopack) · React 19 · TS · Tailwind v4 · s
 - Multiple stale `next dev` processes can pile up and fight over port 3000. Kill them all before starting a fresh one.
 - **`react-hooks/set-state-in-effect`** is enforced by eslint (React 19). Legitimate patterns (auto-close a dialog on action success, fetch-on-mount) need `// eslint-disable-next-line react-hooks/set-state-in-effect`. Do not restructure these — the disable is the intended fix.
 
+## Production & deployment
+- **Live**: `https://edumanager-07ai.onrender.com` (Render, free tier). Production DB is **Prisma Postgres** (managed, hosted).
+- **`.env.local` `DATABASE_URL` now points at the hosted Prisma Postgres pooled URL** (`pooled.db.prisma.io`) — local `npm run dev` hits the hosted DB, NOT local Postgres. Integration tests still use `TEST_DATABASE_URL` (localhost `edumanager_test`), so they stay isolated.
+- **Render Build Command is `npm install && npm run build` — do NOT add `prisma migrate deploy` to it.** Migrations through the pooled URL time out on Render's network (`P1002` advisory lock, 10s). The hosted DB is migrated + seeded already.
+- **Apply schema migrations locally** (`npx prisma migrate deploy` works from dev), or with a **direct** Prisma Postgres connection string (`DIRECT_DATABASE_URL` from Prisma Console) — never the pooled URL for `migrate`. App runtime uses the pooled URL with `@prisma/adapter-pg` (correct).
+- **Stale client cache after redeploys**: browsers cache old `_next/static` JS chunks; after a deploy users may report 404 chunk requests + JS errors like `Cannot read properties of undefined (reading 'toLowerCase')`. This is NOT a code bug — fresh loads are clean (verified). Fix = hard refresh / clear site data.
+- Render free tier has **no persistent disk**: files written to `public/uploads` don't survive redeploys (documented limitation). All database data persists.
+- The `db:seed`/`db:reset` scripts target `DATABASE_URL` (the hosted DB) — they wipe + recreate the demo data there. `scripts/create-database.js` (used by `db:setup`) expects a local Postgres superuser and won't manage Prisma Postgres.
+
 ## Env & secrets
 - `.env.local` is the single source for Next.js and Prisma (via `prisma.config.ts`). `.env.example` is committed with placeholders; `.env.local` is git-ignored. Never commit real values.
 - Password-reset email uses nodemailer (SMTP vars). If SMTP fails, `lib/mailer.ts` logs the would-be email to the server console — the reset flow stays testable offline.
