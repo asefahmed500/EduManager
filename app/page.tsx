@@ -3,6 +3,7 @@ import {
   ArrowRightIcon,
   ClipboardListIcon,
   FileCheckIcon,
+  GitForkIcon,
   GraduationCapIcon,
   LayoutDashboardIcon,
   ShieldCheckIcon,
@@ -109,7 +110,7 @@ export default async function LandingPage() {
               A calm, premium workspace where teachers create assignments,
               students submit work, and admins keep everything organized.
             </p>
-            <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+            <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
               <Button
                 size="lg"
                 className="h-11 px-6"
@@ -128,6 +129,15 @@ export default async function LandingPage() {
               >
                 See how it works
               </Button>
+              <Link
+                href="https://github.com/asefahmed500/EduManager"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex h-11 items-center gap-2 rounded-lg px-4 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <GitForkIcon className="size-4" />
+                Source code
+              </Link>
             </div>
           </div>
 

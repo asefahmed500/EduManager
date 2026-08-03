@@ -26,6 +26,7 @@ Next.js **16.2.6** (App Router, Turbopack) · React 19 · TS · Tailwind v4 · s
 - **`DropdownMenuLabel`/`DropdownMenuItem` must be wrapped in `DropdownMenuGroup`** — otherwise Base UI throws `MenuGroupContext is missing` and crashes the page.
 - Toasts use Base UI's manager: there is **no `toast.success()/toast.error()`**. Use `notify.*` from `@/lib/toast` (wraps `toast.add({ type, description, title })`). `<Toaster />` is already mounted in the root layout.
 - No `form.tsx`; use `field.tsx` (`Field`, `FieldLabel`, `FieldError`) + `input.tsx`/`select.tsx`/`textarea.tsx`. `Select`/`Checkbox` submit via `name` + hidden inputs; the assignment form keeps a hidden input synced to a controlled Select for reliability.
+- **`SelectValue` shows the raw `value` (e.g. an id number) by default** — not the item's label. Always pass a function child: `<SelectValue>{(v) => v ? labelMap[v] ?? v : "Placeholder"}</SelectValue>`. The `DataFilters`, `ClassManager`, `AssignmentForm`, `UserFormDialog`, and `GradeForm` all use this pattern.
 - **Single font system: Inter only.** `font-serif` is mapped to Inter (`globals.css`); H1–H3 get weight 600 + negative tracking from the base layer. Do not add another font family.
 
 ## Prisma 7 gotchas

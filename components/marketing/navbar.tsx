@@ -30,15 +30,15 @@ export function MarketingNavbar({ authed, dashboardHref }: Props) {
   }, []);
 
   return (
-    <header
-      className={cn(
-        "sticky top-0 z-40 w-full border-b transition-colors duration-300",
-        scrolled
-          ? "border-border bg-background/85 backdrop-blur"
-          : "border-transparent bg-background",
-      )}
-    >
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 md:px-6">
+    <header className="sticky top-0 z-40 w-full px-4 pt-4">
+      <div
+        className={cn(
+          "mx-auto flex h-14 max-w-5xl items-center justify-between gap-4 rounded-xl border px-5 transition-all duration-300",
+          scrolled
+            ? "border-border bg-background/90 shadow-[0_2px_12px_rgba(0,0,0,0.08)] backdrop-blur"
+            : "border-border/50 bg-background/70 backdrop-blur",
+        )}
+      >
         <Link
           href="/"
           className="font-serif text-lg tracking-tight"

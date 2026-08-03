@@ -53,11 +53,11 @@ export function MarketingFooter() {
           ))}
         </div>
 
-        <div className="overflow-hidden border-t border-border py-10">
+        <div className="border-t border-border py-10">
           <span
             aria-hidden="true"
-            className="block select-none text-center font-serif font-medium leading-[0.9] tracking-tight text-foreground"
-            style={{ fontSize: "clamp(3rem, 18vw, 16rem)" }}
+            className="block select-none text-center font-serif font-medium leading-[0.85] tracking-tight text-foreground"
+            style={{ fontSize: "clamp(2.5rem, 13vw, 12rem)" }}
           >
             EduManager
           </span>
