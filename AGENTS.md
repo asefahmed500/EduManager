@@ -57,6 +57,7 @@ Next.js **16.2.6** (App Router, Turbopack) · React 19 · TS · Tailwind v4 · s
 ## Dev workflow
 - **After a Prisma schema change + `prisma generate`**, the running dev server's Turbopack cache (`.next/`) may serve a stale client. Kill all `next` processes, delete `.next/`, and restart `npm run dev` — otherwise pages 500 with `Unknown argument` errors from the old generated types.
 - Multiple stale `next dev` processes can pile up and fight over port 3000. Kill them all before starting a fresh one.
+- **`react-hooks/set-state-in-effect`** is enforced by eslint (React 19). Legitimate patterns (auto-close a dialog on action success, fetch-on-mount) need `// eslint-disable-next-line react-hooks/set-state-in-effect`. Do not restructure these — the disable is the intended fix.
 
 ## Env & secrets
 - `.env.local` is the single source for Next.js and Prisma (via `prisma.config.ts`). `.env.example` is committed with placeholders; `.env.local` is git-ignored. Never commit real values.
